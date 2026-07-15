@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/GhostPunishR/NotifyHub/actions/workflows/ci.yml/badge.svg)](https://github.com/GhostPunishR/NotifyHub/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Node.js](https://img.shields.io/badge/Node.js-22%2B-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-22.13%2B-green.svg)](https://nodejs.org/)
 
 NotifyHub is an open-source, modular Discord bot that delivers clean creator notifications from multiple social platforms through Discord Components V2.
 
@@ -64,7 +64,7 @@ templates/              Contributor templates for new modules
 
 ## Requirements
 
-- Node.js 22 or newer
+- Node.js 22.13 or newer
 - npm 10 or newer
 - A Discord application and bot token
 
