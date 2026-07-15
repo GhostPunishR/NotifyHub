@@ -1,0 +1,45 @@
+name: Feature request
+description: Propose an improvement to NotifyHub
+title: '[Feature]: '
+labels: ['enhancement', 'needs-triage']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user or contributor problem should be solved?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Explain the behavior and relevant trade-offs.
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - Core architecture
+        - Discord experience
+        - Network module
+        - Internationalization
+        - Deployment and operations
+        - Contributor experience
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and roadmap items.
+          required: true
+        - label: I am willing to help implement or test this feature.
