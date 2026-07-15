@@ -36,7 +36,7 @@ Provider webhook or poller
   -> delivery audit record
 ```
 
-The current scaffold implements contracts and runtime foundations. Persistence, queues, and production provider clients are roadmap items.
+The Twitch module currently implements the provider-ingestion portion of this flow. Persistence, queues, subscription-to-delivery routing, and production Discord notification delivery are still roadmap items.
 
 ## Application boundaries
 

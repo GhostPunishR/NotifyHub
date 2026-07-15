@@ -1,19 +1,18 @@
-import type { NetworkManifest, NetworkModule } from '@notifyhub/core';
-
-export const manifest = {
-  id: 'twitch',
-  displayName: 'Twitch',
-  version: '0.1.0',
-  status: 'experimental',
-  capabilities: ['oauth', 'webhook', 'live'],
-} as const satisfies NetworkManifest;
-
-export const twitchModule: NetworkModule = {
+export type { TwitchEventSubSubscription, TwitchEventSubType } from './client/helix-types.js';
+export { createTwitchConfig, type TwitchConfig } from './config.js';
+export {
+  TwitchApiError,
+  TwitchAuthenticationError,
+  TwitchChannelInputError,
+  TwitchChannelNotFoundError,
+  TwitchError,
+  TwitchEventSubError,
+} from './errors.js';
+export type { TwitchEventSubSubscriptionManager } from './eventsub/eventsub-subscriptions.js';
+export type { EventSubHandleResult, TwitchEventSubRequest } from './eventsub/eventsub-types.js';
+export {
+  createTwitchModule,
   manifest,
-  async start(): Promise<void> {
-    // Provider lifecycle implementation will be added with the integration.
-  },
-  async stop(): Promise<void> {
-    // Provider lifecycle implementation will be added with the integration.
-  },
-};
+  TwitchModule,
+  type TwitchModuleDependencies,
+} from './twitch.module.js';

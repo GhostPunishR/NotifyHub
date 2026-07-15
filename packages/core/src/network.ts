@@ -38,8 +38,8 @@ export interface SourceResolver {
 }
 
 export interface WebhookRequest {
-  readonly headers: Readonly<Record<string, string | undefined>>;
-  readonly body: unknown;
+  readonly headers: Readonly<Record<string, string | readonly string[] | undefined>>;
+  readonly rawBody: Uint8Array;
 }
 
 export interface WebhookProvider {
