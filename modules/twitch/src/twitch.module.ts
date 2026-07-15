@@ -14,7 +14,11 @@ import {
   TwitchEventSubSubscriptions,
   type TwitchEventSubSubscriptionManager,
 } from './eventsub/eventsub-subscriptions.js';
-import type { EventSubHandleResult, TwitchEventSubRequest } from './eventsub/eventsub-types.js';
+import type {
+  EventSubHandleResult,
+  TwitchEventSubRequest,
+  TwitchStreamEnrichmentFailure,
+} from './eventsub/eventsub-types.js';
 import { TwitchEventSubVerifier } from './eventsub/eventsub-verifier.js';
 
 export const manifest = {
@@ -28,6 +32,8 @@ export const manifest = {
 export interface TwitchModuleDependencies {
   readonly fetch?: typeof fetch;
   readonly now?: () => number;
+  readonly streamEnrichmentTimeoutMs?: number;
+  readonly onStreamEnrichmentFailure?: (failure: TwitchStreamEnrichmentFailure) => void;
 }
 
 export class TwitchModule implements NetworkModule, SourceResolver {
@@ -58,6 +64,14 @@ export class TwitchModule implements NetworkModule, SourceResolver {
         ...(dependencies.now === undefined ? {} : { now: dependencies.now }),
       }),
       client,
+      {
+        ...(dependencies.streamEnrichmentTimeoutMs === undefined
+          ? {}
+          : { streamEnrichmentTimeoutMs: dependencies.streamEnrichmentTimeoutMs }),
+        ...(dependencies.onStreamEnrichmentFailure === undefined
+          ? {}
+          : { onStreamEnrichmentFailure: dependencies.onStreamEnrichmentFailure }),
+      },
     );
     this.subscriptions = new TwitchEventSubSubscriptions(
       client,

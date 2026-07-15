@@ -9,6 +9,7 @@ import {
 } from '../schemas/twitch-schemas.js';
 import type {
   TwitchEventSubSubscription,
+  TwitchEventSubSubscriptionPage,
   TwitchEventSubType,
   TwitchStream,
   TwitchUser,
@@ -84,14 +85,18 @@ export class TwitchHelixClient {
 
   public async listEventSubSubscriptions(
     type: TwitchEventSubType,
-  ): Promise<readonly TwitchEventSubSubscription[]> {
+    cursor?: string,
+  ): Promise<TwitchEventSubSubscriptionPage> {
     const response = await this.#request('/eventsub/subscriptions', {
-      query: { type },
+      query: { type, after: cursor },
       expectedStatuses: [200],
       schema: eventSubSubscriptionsResponseSchema,
     });
 
-    return response.data.map(toEventSubSubscription);
+    return {
+      subscriptions: response.data.map(toEventSubSubscription),
+      ...(response.pagination?.cursor === undefined ? {} : { cursor: response.pagination.cursor }),
+    };
   }
 
   public async createEventSubSubscription(input: {

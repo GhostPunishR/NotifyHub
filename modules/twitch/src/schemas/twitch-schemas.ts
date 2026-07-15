@@ -2,6 +2,11 @@ import { z } from 'zod';
 
 const nonEmptyString = z.string().min(1);
 const isoTimestamp = z.iso.datetime({ offset: true });
+const paginationCursor = z
+  .string()
+  .min(1)
+  .max(2_048)
+  .refine((value) => !/\s/.test(value), 'Pagination cursors must not contain whitespace.');
 
 export const appTokenResponseSchema = z.object({
   access_token: nonEmptyString,
@@ -59,6 +64,11 @@ export const eventSubSubscriptionSchema = z.object({
 
 export const eventSubSubscriptionsResponseSchema = z.object({
   data: z.array(eventSubSubscriptionSchema),
+  pagination: z
+    .object({
+      cursor: paginationCursor.optional(),
+    })
+    .optional(),
 });
 
 export const eventSubVerificationSchema = z.object({

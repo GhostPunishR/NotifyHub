@@ -7,6 +7,7 @@ import {
   createTwitchConfig,
   createTwitchModule,
   type TwitchModule,
+  type TwitchStreamEnrichmentFailure,
 } from '@notifyhub/module-twitch';
 import { xModule } from '@notifyhub/module-x';
 import { youtubeModule } from '@notifyhub/module-youtube';
@@ -16,7 +17,14 @@ export interface ApplicationModules {
   readonly twitch: TwitchModule;
 }
 
-export function createApplicationModules(environment: Environment): ApplicationModules {
+export interface ApplicationModuleOptions {
+  readonly onTwitchStreamEnrichmentFailure?: (failure: TwitchStreamEnrichmentFailure) => void;
+}
+
+export function createApplicationModules(
+  environment: Environment,
+  options: ApplicationModuleOptions = {},
+): ApplicationModules {
   const twitch = createTwitchModule(
     createTwitchConfig({
       clientId: environment.TWITCH_CLIENT_ID,
@@ -24,6 +32,11 @@ export function createApplicationModules(environment: Environment): ApplicationM
       eventSubSecret: environment.TWITCH_EVENTSUB_SECRET,
       eventSubCallbackUrl: environment.TWITCH_EVENTSUB_CALLBACK_URL,
     }),
+    {
+      ...(options.onTwitchStreamEnrichmentFailure === undefined
+        ? {}
+        : { onStreamEnrichmentFailure: options.onTwitchStreamEnrichmentFailure }),
+    },
   );
 
   return {

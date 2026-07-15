@@ -1,6 +1,6 @@
 import type { TwitchHelixClient } from '../client/helix-client.js';
-import type { TwitchEventSubSubscription } from '../client/helix-types.js';
-import { TwitchEventSubError } from '../errors.js';
+import type { TwitchEventSubSubscription, TwitchStream } from '../client/helix-types.js';
+import { TwitchApiError, TwitchEventSubError } from '../errors.js';
 import { normalizeChannelUpdate } from '../normalizers/channel-update.js';
 import { normalizeStreamOffline } from '../normalizers/stream-offline.js';
 import { normalizeStreamOnline } from '../normalizers/stream-online.js';
@@ -13,14 +13,38 @@ import {
   streamOnlineEventSchema,
   type EventSubSubscriptionPayload,
 } from '../schemas/twitch-schemas.js';
-import type { EventSubHandleResult, TwitchEventSubRequest } from './eventsub-types.js';
+import type {
+  EventSubHandleResult,
+  TwitchEventSubRequest,
+  TwitchStreamEnrichmentFailure,
+} from './eventsub-types.js';
 import type { TwitchEventSubVerifier } from './eventsub-verifier.js';
 
+const DEFAULT_STREAM_ENRICHMENT_TIMEOUT_MS = 1_500;
+
+export interface TwitchEventSubHandlerOptions {
+  readonly streamEnrichmentTimeoutMs?: number;
+  readonly onStreamEnrichmentFailure?: (failure: TwitchStreamEnrichmentFailure) => void;
+}
+
 export class TwitchEventSubHandler {
+  readonly #streamEnrichmentTimeoutMs: number;
+  readonly #onStreamEnrichmentFailure:
+    ((failure: TwitchStreamEnrichmentFailure) => void) | undefined;
+
   public constructor(
     private readonly verifier: TwitchEventSubVerifier,
     private readonly client: TwitchHelixClient,
-  ) {}
+    options: TwitchEventSubHandlerOptions = {},
+  ) {
+    this.#streamEnrichmentTimeoutMs =
+      options.streamEnrichmentTimeoutMs ?? DEFAULT_STREAM_ENRICHMENT_TIMEOUT_MS;
+    this.#onStreamEnrichmentFailure = options.onStreamEnrichmentFailure;
+
+    if (!Number.isInteger(this.#streamEnrichmentTimeoutMs) || this.#streamEnrichmentTimeoutMs < 1) {
+      throw new TypeError('The Twitch stream enrichment timeout must be a positive integer.');
+    }
+  }
 
   public async handle(request: TwitchEventSubRequest): Promise<EventSubHandleResult> {
     const verified = this.verifier.verify(request);
@@ -45,7 +69,11 @@ export class TwitchEventSubHandler {
         switch (payload.subscription.type) {
           case 'stream.online': {
             const event = parsePayload(streamOnlineEventSchema, payload.event);
-            const stream = await this.client.getStreamByUserId(event.broadcaster_user_id);
+            const stream = await this.#enrichStream({
+              messageId: verified.messageId,
+              subscriptionId: subscription.id,
+              broadcasterUserId: event.broadcaster_user_id,
+            });
             return {
               type: 'notification',
               subscription,
@@ -87,6 +115,69 @@ export class TwitchEventSubHandler {
       }
     }
   }
+
+  async #enrichStream(input: {
+    readonly messageId: string;
+    readonly subscriptionId: string;
+    readonly broadcasterUserId: string;
+  }): Promise<TwitchStream | null> {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
+    try {
+      return await Promise.race([
+        this.client.getStreamByUserId(input.broadcasterUserId),
+        new Promise<never>((_resolve, reject) => {
+          timeout = setTimeout(
+            () => reject(new StreamEnrichmentTimeoutError()),
+            this.#streamEnrichmentTimeoutMs,
+          );
+        }),
+      ]);
+    } catch (error) {
+      this.#reportEnrichmentFailure(toEnrichmentFailure(input, error));
+      return null;
+    } finally {
+      if (timeout !== undefined) clearTimeout(timeout);
+    }
+  }
+
+  #reportEnrichmentFailure(failure: TwitchStreamEnrichmentFailure): void {
+    try {
+      this.#onStreamEnrichmentFailure?.(failure);
+    } catch {
+      // Diagnostic observers must not turn optional enrichment into a webhook failure.
+    }
+  }
+}
+
+class StreamEnrichmentTimeoutError extends Error {}
+
+function toEnrichmentFailure(
+  input: {
+    readonly messageId: string;
+    readonly subscriptionId: string;
+    readonly broadcasterUserId: string;
+  },
+  error: unknown,
+): TwitchStreamEnrichmentFailure {
+  const identity = {
+    eventSubMessageId: input.messageId,
+    eventSubSubscriptionId: input.subscriptionId,
+    broadcasterUserId: input.broadcasterUserId,
+  };
+
+  if (error instanceof StreamEnrichmentTimeoutError) {
+    return { ...identity, reason: 'timeout' };
+  }
+  if (error instanceof TwitchApiError) {
+    return {
+      ...identity,
+      reason: 'helix_error',
+      status: error.status,
+      retryable: error.retryable,
+    };
+  }
+  return { ...identity, reason: 'unexpected_error' };
 }
 
 function parsePayload<T>(

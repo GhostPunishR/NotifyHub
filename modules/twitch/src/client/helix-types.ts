@@ -29,3 +29,8 @@ export interface TwitchEventSubSubscription {
   readonly callbackUrl: string;
   readonly createdAt: Date;
 }
+
+export interface TwitchEventSubSubscriptionPage {
+  readonly subscriptions: readonly TwitchEventSubSubscription[];
+  readonly cursor?: string;
+}

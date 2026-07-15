@@ -11,6 +11,15 @@ export interface VerifiedEventSubRequest {
   readonly payload: unknown;
 }
 
+export interface TwitchStreamEnrichmentFailure {
+  readonly eventSubMessageId: string;
+  readonly eventSubSubscriptionId: string;
+  readonly broadcasterUserId: string;
+  readonly reason: 'timeout' | 'helix_error' | 'unexpected_error';
+  readonly status?: number;
+  readonly retryable?: boolean;
+}
+
 export type EventSubHandleResult =
   | {
       readonly type: 'verification';
