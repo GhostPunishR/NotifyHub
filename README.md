@@ -10,7 +10,7 @@ The project is designed around independent network modules. Twitch, Kick, YouTub
 
 ## Project status
 
-NotifyHub is in early development. The repository currently contains the production-oriented foundation, module contracts, multilingual infrastructure, Discord Components V2 helpers, contribution standards, and Railway deployment configuration.
+NotifyHub is in early development. The repository contains the production-oriented foundation, module contracts, multilingual infrastructure, Discord Components V2 helpers, contribution standards, Railway deployment configuration, and an experimental Twitch EventSub ingestion slice.
 
 ## Initial goals
 
@@ -31,14 +31,14 @@ All source code, comments, commits, issues, pull requests, and project documenta
 
 ## Network modules
 
-| Module  | Package                     | Status                |
-| ------- | --------------------------- | --------------------- |
-| Twitch  | `@notifyhub/module-twitch`  | Experimental scaffold |
-| Kick    | `@notifyhub/module-kick`    | Planned scaffold      |
-| YouTube | `@notifyhub/module-youtube` | Planned scaffold      |
-| TikTok  | `@notifyhub/module-tiktok`  | Planned scaffold      |
-| X       | `@notifyhub/module-x`       | Planned scaffold      |
-| Bluesky | `@notifyhub/module-bluesky` | Planned scaffold      |
+| Module  | Package                     | Status                 |
+| ------- | --------------------------- | ---------------------- |
+| Twitch  | `@notifyhub/module-twitch`  | Experimental ingestion |
+| Kick    | `@notifyhub/module-kick`    | Planned scaffold       |
+| YouTube | `@notifyhub/module-youtube` | Planned scaffold       |
+| TikTok  | `@notifyhub/module-tiktok`  | Planned scaffold       |
+| X       | `@notifyhub/module-x`       | Planned scaffold       |
+| Bluesky | `@notifyhub/module-bluesky` | Planned scaffold       |
 
 ## Repository layout
 
@@ -76,7 +76,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Set at least `DISCORD_TOKEN` and `DISCORD_CLIENT_ID` in `.env`. During development, setting `DISCORD_GUILD_ID` registers slash commands in one guild for immediate updates.
+Set the Discord and Twitch variables documented in `.env.example`. During development, setting `DISCORD_GUILD_ID` registers slash commands in one guild for immediate updates. See [`modules/twitch/README.md`](modules/twitch/README.md) for Twitch application and EventSub setup.
 
 ## Quality checks
 

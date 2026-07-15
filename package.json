@@ -24,7 +24,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm run build && node --test packages/i18n/dist/index.test.js",
+    "test": "npm run build && node --test packages/i18n/dist/index.test.js modules/twitch/dist/tests/*.test.js apps/bot/dist/*.test.js",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run test"
   },
   "devDependencies": {

@@ -4,18 +4,61 @@ import { translate } from '@notifyhub/i18n';
 import { createLogger } from '@notifyhub/logger';
 import { commandMap, commands } from './commands.js';
 import { startHealthServer, stopHealthServer } from './health-server.js';
-import { networkModules } from './modules.js';
+import { createApplicationModules } from './modules.js';
+import { createTwitchEventSubRoute } from './twitch-eventsub-route.js';
 
 const environment = loadEnvironment();
 const logger = createLogger({ level: environment.LOG_LEVEL, service: 'notifyhub-bot' });
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const moduleAbortController = new AbortController();
 let shuttingDown = false;
+const { networkModules, twitch } = createApplicationModules(environment);
+
+const twitchEventSubRoute = createTwitchEventSubRoute({
+  twitch,
+  onEvent(event) {
+    logger.info(
+      {
+        eventId: event.id,
+        network: event.network,
+        eventType: event.type,
+        sourceId: event.source.externalId,
+        sourceUsername: event.source.username,
+        occurredAt: event.occurredAt.toISOString(),
+      },
+      'Normalized social event received without a configured delivery pipeline.',
+    );
+    return Promise.resolve();
+  },
+  onRevocation(subscription) {
+    logger.warn(
+      {
+        subscriptionId: subscription.id,
+        subscriptionType: subscription.type,
+        subscriptionStatus: subscription.status,
+      },
+      'Twitch EventSub subscription was revoked.',
+    );
+    return Promise.resolve();
+  },
+  onError(error) {
+    logger.warn(
+      {
+        error:
+          error instanceof Error
+            ? { name: error.name, message: error.message }
+            : { name: 'UnknownError' },
+      },
+      'Twitch EventSub request rejected.',
+    );
+  },
+});
 
 const healthServer = await startHealthServer({
   port: environment.PORT,
   isDiscordReady: () => client.isReady(),
   moduleCount: networkModules.length,
+  twitchEventSubRoute,
 });
 
 logger.info({ port: environment.PORT }, 'Health server started.');

@@ -23,6 +23,8 @@ cp .env.example .env
 npm run check
 ```
 
+The bot validates both Discord and Twitch configuration at startup. For local EventSub testing, use a public HTTPS tunnel whose callback path is `/webhooks/twitch/eventsub`; never commit tunnel URLs, tokens, or webhook secrets.
+
 ## Branch names
 
 Use a short prefix and a descriptive kebab-case name:

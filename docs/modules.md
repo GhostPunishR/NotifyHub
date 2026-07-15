@@ -46,3 +46,11 @@ Only create folders required by the provider.
 - `stable`: production-ready and covered by integration tests.
 
 Use `templates/network-module` as the starting checklist for a new integration.
+
+## Twitch module
+
+`modules/twitch` is an experimental provider implementation rather than a scaffold. It supports app access tokens, channel resolution, current-stream enrichment, webhook EventSub subscription management, request verification, and normalization for `stream.online`, `stream.offline`, and `channel.update`.
+
+The module exports a focused `TwitchModule` API and has no Discord dependency. The bot owns the HTTP route and application-level event handler. Persistent subscription lookup, database uniqueness for `SocialEvent.id`, queues, and Discord delivery remain separate application concerns.
+
+See [`modules/twitch/README.md`](../modules/twitch/README.md) for configuration, provider behavior, security details, and local testing.

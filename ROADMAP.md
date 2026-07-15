@@ -13,7 +13,7 @@ The roadmap is directional and may change as platform APIs, contributor capacity
 ## First usable release
 
 - [ ] Persistent guild and subscription configuration
-- [ ] Twitch EventSub integration
+- [x] Twitch EventSub ingestion and normalization
 - [ ] Notification deduplication
 - [ ] Delivery history and retry policy
 - [ ] Setup and test slash commands
