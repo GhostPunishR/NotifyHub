@@ -58,18 +58,22 @@ export class TwitchAppTokenProvider {
 
   async #requestToken(): Promise<TwitchAccessToken> {
     const url = new URL('https://id.twitch.tv/oauth2/token');
-    url.searchParams.set('client_id', this.#clientId);
-    url.searchParams.set('client_secret', this.#clientSecret);
-    url.searchParams.set('grant_type', 'client_credentials');
+    const body = new URLSearchParams({
+      client_id: this.#clientId,
+      client_secret: this.#clientSecret,
+      grant_type: 'client_credentials',
+    });
 
     let response: Response;
     try {
       response = await this.#fetch(url, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
         signal: AbortSignal.timeout(this.#requestTimeoutMs),
       });
-    } catch (error) {
-      throw new TwitchAuthenticationError('The Twitch app token request failed.', { cause: error });
+    } catch {
+      throw new TwitchAuthenticationError('The Twitch app token request failed.');
     }
 
     const payload: unknown = await response.json().catch(() => undefined);

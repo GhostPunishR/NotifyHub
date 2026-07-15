@@ -9,7 +9,11 @@ export {
   TwitchEventSubError,
 } from './errors.js';
 export type { TwitchEventSubSubscriptionManager } from './eventsub/eventsub-subscriptions.js';
-export type { EventSubHandleResult, TwitchEventSubRequest } from './eventsub/eventsub-types.js';
+export type {
+  EventSubHandleResult,
+  TwitchEventSubRequest,
+  TwitchStreamEnrichmentFailure,
+} from './eventsub/eventsub-types.js';
 export {
   createTwitchModule,
   manifest,

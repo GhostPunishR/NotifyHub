@@ -12,7 +12,11 @@ const logger = createLogger({ level: environment.LOG_LEVEL, service: 'notifyhub-
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const moduleAbortController = new AbortController();
 let shuttingDown = false;
-const { networkModules, twitch } = createApplicationModules(environment);
+const { networkModules, twitch } = createApplicationModules(environment, {
+  onTwitchStreamEnrichmentFailure(failure) {
+    logger.warn(failure, 'Twitch stream enrichment failed; using the signed EventSub payload.');
+  },
+});
 
 const twitchEventSubRoute = createTwitchEventSubRoute({
   twitch,

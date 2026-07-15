@@ -6,9 +6,9 @@ The module does not import `discord.js`, render messages, select Discord targets
 
 ## Supported capabilities
 
-- OAuth 2.0 client credentials with an in-memory app token cache.
+- Form-encoded OAuth 2.0 client credentials with an in-memory app token cache.
 - Twitch login and canonical channel URL resolution.
-- Current stream lookup for online-event title, category, and thumbnail enrichment.
+- Best-effort current stream lookup for online-event title, category, and thumbnail enrichment.
 - Webhook subscription creation and deletion for:
   - `stream.online`
   - `stream.offline`
@@ -64,9 +64,15 @@ The bot passes raw HTTP bytes and headers to `handleEventSub`. HTTP response sel
 
 ## Authentication and token refresh
 
-The module uses the Twitch OAuth client credentials flow described in [Getting OAuth Access Tokens](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#client-credentials-grant-flow). The app token is cached in process memory, refreshed before expiration, and protected by a shared in-flight promise so concurrent callers create only one token.
+The module uses the Twitch OAuth client credentials flow described in [Getting OAuth Access Tokens](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#client-credentials-grant-flow). It sends `client_id`, `client_secret`, and `grant_type` in an `application/x-www-form-urlencoded` `POST` body. Credentials are never placed in the token endpoint URL. The app token is cached in process memory, refreshed before expiration, and protected by a shared in-flight promise so concurrent callers create only one token.
 
 If Helix returns `401`, the client invalidates the token and retries the request once with a newly acquired token. It does not repeat authentication failures indefinitely. Restarting the process clears the cache and obtains a new token on demand.
+
+## EventSub subscription lookup
+
+Before creating a subscription, the manager searches the Helix result pages for the requested type, broadcaster ID, and callback URL. It follows Twitch's opaque `pagination.cursor` until it finds a reusable subscription or reaches a page without another cursor. Both `enabled` and `webhook_callback_verification_pending` subscriptions are reusable, which prevents duplicate creation while Twitch validates the callback.
+
+Pagination is bounded to 100 pages. Empty, oversized, whitespace-containing, or repeated cursors produce a typed non-retryable error instead of creating a subscription or entering an unbounded loop. Rate limits, server failures, and transport errors encountered during pagination retain the normal typed Helix behavior and are not retried automatically.
 
 ## Helix errors, rate limits, and retries
 
@@ -76,11 +82,15 @@ The client parses `Ratelimit-Limit`, `Ratelimit-Remaining`, and `Ratelimit-Reset
 
 The only automatic Helix retry is the single token-refresh retry after `401`. Token endpoint failures are not retried automatically.
 
+`stream.online` enrichment is optional and has a dedicated 1.5-second deadline covering the complete token and Helix lookup path from the EventSub handler's perspective. A timeout, transport error, `429`, server error, or malformed stream response produces the valid normalized event from the signed EventSub payload without title, category, or thumbnail. The application receives a sanitized structured warning containing only EventSub identity, broadcaster ID, failure class, HTTP status, and retryability. It never receives tokens, secrets, signatures, or raw payloads through this warning.
+
 ## EventSub security and responses
 
 The verifier requires exactly one value for each Twitch EventSub message ID, timestamp, signature, and message-type header. It signs the exact raw request bytes using the message ID, timestamp, and configured secret. Missing or duplicated headers, stale or excessively future timestamps, malformed signatures, invalid JSON, and schema-invalid payloads are rejected.
 
-Callback verification returns the Twitch challenge exactly as plain text. Notifications return a normalized event; revocations return sanitized subscription identity and status. The HTTP route returns `204` only after the application-level handler completes. Unexpected handler failures therefore cause a non-success response rather than silently acknowledging lost work.
+Callback verification returns the Twitch challenge exactly as plain text. Notifications return a normalized event; revocations return sanitized subscription identity and status. The HTTP route returns `204` only after the application-level event handler completes; it does not acknowledge first and defer application work. Unexpected handler failures therefore cause a non-success response rather than silently acknowledging lost work.
+
+The current development handler only records sanitized metadata and is not durable storage. When persistent event storage is added, the application handler must commit the event and its unique identity before it resolves and allows the route to return `204`. Until then, a process failure after receipt can still lose an event even though early acknowledgement is avoided.
 
 Twitch controls webhook redelivery after a failed HTTP response. NotifyHub does not run a second webhook retry loop. The handler must remain idempotent because Twitch can deliver a message more than once.
 
@@ -113,7 +123,7 @@ To test Twitch end to end, use a temporary public HTTPS tunnel to the existing b
 - Persistent subscriptions, guild mappings, and OAuth connection storage are not implemented.
 - Persistent event uniqueness, queues, delivery retries, and Discord delivery are not implemented.
 - The development-safe bot handler logs only event ID, network, type, source identity, and occurrence time.
-- Duplicate-subscription detection examines the enabled subscriptions returned by the current Helix response; pagination and cross-process creation races still require persistent coordination.
-- `stream.online` enrichment depends on a current stream being visible through Helix. The normalized event remains valid without optional enrichment when no stream is returned.
+- Subscription pagination prevents duplicates already visible through Helix, but cross-process creation races still require persistent coordination.
+- `stream.online` enrichment is best-effort and bounded; title, category, and thumbnail are omitted when no current stream is visible or Helix fails.
 - Revocations are surfaced and logged but are not automatically recreated.
 - EventSub webhook secret rotation requires subscription replacement.
