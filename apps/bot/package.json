@@ -1,0 +1,24 @@
+{
+  "name": "@notifyhub/bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@notifyhub/config": "0.1.0",
+    "@notifyhub/core": "0.1.0",
+    "@notifyhub/discord-ui": "0.1.0",
+    "@notifyhub/i18n": "0.1.0",
+    "@notifyhub/logger": "0.1.0",
+    "@notifyhub/module-bluesky": "0.1.0",
+    "@notifyhub/module-kick": "0.1.0",
+    "@notifyhub/module-tiktok": "0.1.0",
+    "@notifyhub/module-twitch": "0.1.0",
+    "@notifyhub/module-x": "0.1.0",
+    "@notifyhub/module-youtube": "0.1.0",
+    "discord.js": "^14.26.5"
+  }
+}

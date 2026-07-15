@@ -1,0 +1,39 @@
+{
+  "name": "notifyhub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A modular, multilingual Discord bot for cross-platform creator notifications.",
+  "license": "MIT",
+  "author": "GhostPunishR",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "modules/*"
+  ],
+  "scripts": {
+    "clean": "find apps packages modules -type d -name dist -prune -exec rm -rf {} +",
+    "build": "tsc --build --force --pretty false",
+    "dev": "npm run build && node --env-file=.env apps/bot/dist/index.js",
+    "start": "node --enable-source-maps apps/bot/dist/index.js",
+    "typecheck": "tsc --build --pretty false",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run build && node --test packages/i18n/dist/index.test.js",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^22.8.7",
+    "eslint": "^9.39.1",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.1"
+  },
+  "packageManager": "npm@10.9.2"
+}

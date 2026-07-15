@@ -1,0 +1,60 @@
+name: Bug report
+description: Report a reproducible NotifyHub problem
+title: '[Bug]: '
+labels: ['bug', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting a bug. Do not include tokens, secrets, or private payloads.
+  - type: input
+    id: version
+    attributes:
+      label: NotifyHub version or commit
+      placeholder: v0.1.0 or commit SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Discord bot
+        - i18n
+        - Twitch module
+        - Kick module
+        - YouTube module
+        - TikTok module
+        - X module
+        - Bluesky module
+        - Railway deployment
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: Provide a minimal, reproducible sequence.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues.
+          required: true
+        - label: I removed tokens, secrets, personal data, and private payloads.
+          required: true
